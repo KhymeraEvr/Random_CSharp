@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Xml;
 
 namespace LibraryManager
 {
@@ -41,7 +42,7 @@ namespace LibraryManager
 
         public Book Search(string name, string author)
         {
-            foreach(Book book in _library)
+            foreach (Book book in _library)
             {
                 if (book.name == name && book.author == author) return book;
             }
@@ -51,13 +52,13 @@ namespace LibraryManager
         public bool ReadBooksFromFile(string filePath)
         {
             StreamReader sr = new StreamReader(filePath);
-            
-            if(!File.Exists(filePath))
+
+            if (!File.Exists(filePath))
             {
                 return false;
             }
 
-            while(!sr.EndOfStream)
+            while (!sr.EndOfStream)
             {
                 AddBook(sr.ReadLine());
             }
@@ -69,7 +70,7 @@ namespace LibraryManager
         {
             _library.Sort();
             StreamWriter sw = File.CreateText(_filePath);
-            foreach(Book bk in _library)
+            foreach (Book bk in _library)
             {
                 sw.WriteLine(bk.ToString());
             }
@@ -86,5 +87,37 @@ namespace LibraryManager
 
             _library.Add(bk);
         }
+
+        public void formatToXML()
+        {
+            XmlDocument xmlLibr = new XmlDocument();
+            XmlDeclaration xmlDecl = xmlLibr.CreateXmlDeclaration("1.0", "utf-8", null);
+            xmlLibr.AppendChild(xmlDecl);
+            XmlElement xmlLibrary = xmlLibr.CreateElement("library");
+            foreach(Book bk in _library)
+            {
+                XmlElement bookElement = xmlLibr.CreateElement("book");
+                XmlElement authorElemnet = xmlLibr.CreateElement("author");
+                authorElemnet.InnerText = bk.author;
+                XmlElement yearElement = xmlLibr.CreateElement("year");
+                yearElement.InnerText = bk.year;
+                XmlElement titleElement = xmlLibr.CreateElement("name");
+                titleElement.SetAttribute("language", "en");
+                XmlCDataSection titleSection = xmlLibr.CreateCDataSection(bk.name);
+                titleElement.AppendChild(titleSection);
+
+                bookElement.AppendChild(authorElemnet);
+                bookElement.AppendChild(yearElement);
+                bookElement.AppendChild(titleElement);
+                xmlLibrary.AppendChild(bookElement);
+            }
+            xmlLibr.AppendChild(xmlLibrary);
+            xmlLibr.Save("library.xml");
+        }
+
+    }
+    class LibraryExceptions : Exception
+    {
+        public string message;
     }
 }
